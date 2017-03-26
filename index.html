@@ -1,0 +1,301 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Conway's Game Of Life Demo</title>
+		<style>
+			body {
+				background-color: #000000;
+			}
+			
+			h1 {
+				text-align: center;
+				color: #00FF00;
+			}
+			
+			.center {
+				display: block;
+				margin: 0 auto;
+			}
+			
+			button, select {
+				width: 100px;
+			}
+		</style>
+	</head>
+<body>
+	<h1>Conway's Game Of Life Demo</h1>
+	<canvas class="center" width="800" height="600" id="mainCanvas" >
+	</canvas>
+	<br>
+	<button id="btn" class="center" type="button">PlaceHolder</button>
+	<br>
+	<button id="generateBtn" class="center" type="button">Generate</button>
+	<br>
+	<select id="cellSizeBtn" class="center">
+		<option value="50">Cell Size: 50</option>
+		<option value="20" selected value>Cell Size: 20</option>
+		<option value="10">Cell Size: 10</option>
+	</select>
+	
+	<script>
+	"use strict";
+	<!-- Written by Levent Divilioglu -->
+	<!-- 25.03.2017                   -->
+	<!-- En buyuk FENERBAHCE          -->
+	<!-- Fenerbahce SK #1             -->
+		(function () {
+			// globals : START
+			var CANVAS				= document.getElementById('mainCanvas');
+			var CTX					= CANVAS.getContext("2d");
+			var BUTTON				= document.getElementById('btn');
+			var GENERATE_BUTTON		= document.getElementById('generateBtn');
+			var RESTART_BUTTON		= document.getElementById('restartBtn');
+			var CELL_SIZE_BUTTON	= document.getElementById('cellSizeBtn');
+			
+			var WIDTH				= CANVAS.width;
+			var HEIGHT				= CANVAS.height;
+			
+			var CELL_SIZE			= 20;
+			
+			var CELL_WIDTH			= CELL_SIZE;
+			var CELL_HEIGHT 		= CELL_SIZE;
+			var CELL_COLOR  		= '#00FF00';
+			var BACKGROUND_COLOR	= '#000000';
+			
+			var TIME_INTERVAL_IN_MS	= 10;
+			
+			var globals = {
+				ms:			TIME_INTERVAL_IN_MS,
+				c:			CTX,
+				w:			WIDTH,
+				h:			HEIGHT,
+				cellW:		CELL_WIDTH,
+				cellH:		CELL_HEIGHT,
+				color:		CELL_COLOR,
+				bgColor:	BACKGROUND_COLOR,
+				btn:		BUTTON,
+				genBtn:		GENERATE_BUTTON,
+				resBtn:		RESTART_BUTTON,
+				cszBtn:		CELL_SIZE_BUTTON,
+				animState:	false,
+				anim:		'',	// setInterval placeholder
+				cells:		[]	// array placeholder
+			}
+			// globals : END
+			
+			// initialization
+			init(globals);
+		})();
+		
+		function init(globals) {
+			resetScreen(globals);
+			
+			globals.btn.innerText = "Start";
+			
+			// main button click event handler
+			globals.btn.addEventListener("click", function() {
+				if(!globals.animState) {
+					globals.animState = true;
+					globals.btn.innerText = "Pause";
+					globals.anim = setInterval(function() {
+						mainLoop(globals);
+					}, globals.ms);
+					globals.genBtn.disabled = true;
+					globals.cszBtn.disabled = true;
+				} else {
+					globals.animState = false;
+					globals.btn.innerText = "Start";
+					clearInterval(globals.anim);
+					globals.genBtn.disabled = false;
+					globals.cszBtn.disabled = false;
+				}
+			});
+			
+			// generate button click event handler
+			globals.genBtn.addEventListener("click", function() {
+				if(!globals.animState) {
+					resetScreen(globals);
+					randomizeCells(globals);
+					printMatrix(globals);
+				}
+			});
+			
+			globals.cszBtn.addEventListener("change", function() {
+				var cellSize = this.value - 0;	// string to number
+				
+				globals.cellW = cellSize;
+				globals.cellH = cellSize;
+				resetScreen(globals);
+				randomizeCells(globals);
+				printMatrix(globals);
+			});
+			
+			randomizeCells(globals);
+			printMatrix(globals);
+		}
+		
+		/* pre-initialize cells */
+		function randomizeCells(g) {
+			var newArray = [];
+			
+			var maxRow = g.w / g.cellW;
+			var maxCol = g.h / g.cellH;
+			
+			console.log("row: " + maxRow + ", col: " + maxCol);
+			
+			for(var i = 0; i < maxRow; i++) {
+				for(var j = 0; j < maxCol; j++) {
+					var cell = {
+						x: i,
+						y: j,
+						state: getRandomState()	// 2 states: alive, dead
+					}
+					
+					newArray.push(cell);
+				}
+			}
+			
+			g.cells = newArray;
+		}
+		
+		/* close range: [0, max] */
+		function getRandom(max) {
+			return Math.floor(Math.random()*(max+1));
+		}
+		
+		function getRandomBool() {
+			return getRandom(1) === 1 ? true : false;
+		}
+		
+		function getRandomState() {
+			if(getRandomBool()) {
+				return "alive";
+			}
+			
+			return "dead";
+		}
+		
+		/* g -> globals */
+		function resetScreen(g) {
+			clearScreen(g);
+			printGrid(g);
+		}
+		
+		function clearScreen(g) {
+			g.c.fillStyle= g.bgColor;
+			g.c.fillRect(0, 0, g.w, g.h);
+		}
+		
+		function printGrid(g) {
+			for(var i = 0; i < g.w; i+= g.cellW) {
+				line(g, i, 0, i, g.h);
+			}
+			line(g, g.w, 0, g.w, g.h);
+			
+			for(var j = 0; j < g.h; j+= g.cellH) {
+				line(g, 0, j, g.w, j);
+			}
+			line(g, 0, g.h, g.w, g.h);
+		}
+		
+		function line(g, x0, y0, x, y) {
+			g.c.beginPath();
+			g.c.moveTo(x0, y0);
+			g.c.lineTo(x , y) ;
+			g.c.lineWidth = 3;
+
+			// set line color
+			g.c.strokeStyle = g.color;
+			g.c.stroke();
+		}
+		
+		function fillSquare(g, x, y) {
+			g.c.fillStyle = g.color;
+			g.c.fillRect(x*g.cellW, y*g.cellH, g.cellW, g.cellH);
+		}
+		
+		function getState(g, x, y) {
+			for(var i = 0; i < g.cells.length; i++) {
+				if(g.cells[i].x === x && g.cells[i].y === y) {
+					return g.cells[i].state;
+				}
+			}
+		}
+		
+		function printMatrix(g) {
+			for(var i = 0; i < g.cells.length; i++) {
+				if(g.cells[i].state === "alive") {
+					fillSquare(g, g.cells[i].x, g.cells[i].y);
+				}
+			}
+		}
+		
+		function mainLoop(g) {
+			processMatrix(g);
+			resetScreen(g);
+			printMatrix(g);
+		}
+		
+		function processMatrix(g) {
+			var newArray = [];
+			
+			for(var i = 0; i < g.cells.length; i++) {
+				var newCell = {
+					x: g.cells[i].x,
+					y: g.cells[i].y,
+					state: handleCellState(g, g.cells[i].x, g.cells[i].y)
+				};
+				
+				newArray.push(newCell);
+			}
+			
+			g.cells = newArray;
+		}
+		
+		/*
+			Any live cell with fewer than two live neighbours dies, as if caused by underpopulation.
+			Any live cell with two or three live neighbours lives on to the next generation.
+			Any live cell with more than three live neighbours dies, as if by overpopulation.
+			Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+		*/
+		function handleCellState(g, x, y) {
+			var count = countCellNeighboors(g, x, y);
+			
+			if(getState(g, x, y) === "alive") {
+				if(count < 2) {
+					return "dead";			// dead by underpopulation
+				} else if (count <= 3) {
+					return "alive";
+				} else {
+					return "dead";			// dead by overpopulation
+				}
+			} else if(getState(g, x, y) === "dead") {
+				if(count === 3) {
+					return "alive";
+				} else {
+					return "dead";
+				}
+			}
+
+		}
+		
+		function countCellNeighboors(g, x, y) {
+			var count = 0;
+			
+			for(var i = x-1; i <= x+1 ; i++) {
+				for(var j = y-1; j <= y+1; j++) {
+					if(i==x && j == y) {
+						continue;
+					}
+					if(getState(g, i, j) === "alive") {	// for invalid cells like [-1,-1], undefined values will be ignored
+						count++;
+					}
+				}
+			}
+			
+			return count;
+		}
+	</script>
+</body>
+</html>
