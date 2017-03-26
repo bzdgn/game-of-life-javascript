@@ -2,6 +2,9 @@ Conway's Game Of Life
 =====================
 This is a demo of Conway's Game Of Life with JavaScript and HTML5 Canvas
 
+Checkout online demo on 
+[my personal website](http://leventdivilioglu.com/demos/game-of-life/)
+
 Here are some screen shots for different Cell Size's;
 
 <p align="center">
