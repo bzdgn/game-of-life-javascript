@@ -5,6 +5,12 @@ This is a demo of Conway's Game Of Life with JavaScript and HTML5 Canvas
 Checkout online demo on 
 [my personal website](http://leventdivilioglu.com/demos/game-of-life/)
 
+Here down below, a simple gif-record of the screen;
+
+<p align="center">
+	<img src="https://github.com/bzdgn/game-of-life-javascript/blob/master/screen-shots/demo.gif" alt="game-of-life-1">
+</p>
+
 Here are some screen shots for different Cell Size's;
 
 <p align="center">
